@@ -1,6 +1,6 @@
 # Codex — Internal Knowledge & Search Platform
 
-Codex is Pantheon’s internal knowledge system. It indexes authoritative documentation from Atlas (read-only) and provides fast, ranked search, document viewing, and usage analytics.
+Codex is Pantheon’s internal knowledge system and is a hybrid Retrieval Platform supporting CAG and optional RAG workflows. It indexes authoritative documentation from Atlas (read-only) and provides fast, ranked search, document viewing, and usage analytics.
 
 Codex is designed as **infrastructure**, not a wiki clone.
 
