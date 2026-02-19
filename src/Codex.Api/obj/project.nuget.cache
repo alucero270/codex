@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Rlq4H3/uEYM=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Alex Lucero\\source\\repos\\codex\\src\\Codex.Api\\Codex.Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Alex Lucero\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.3\\microsoft.aspnetcore.openapi.10.0.3.nupkg.sha512",
+    "C:\\Users\\Alex Lucero\\.nuget\\packages\\microsoft.openapi\\2.0.0\\microsoft.openapi.2.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

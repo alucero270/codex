@@ -1,0 +1,12 @@
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\bin\Debug\net10.0\Codex.Contracts.deps.json
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\bin\Debug\net10.0\Codex.Contracts.dll
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\bin\Debug\net10.0\Codex.Contracts.pdb
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\Codex.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\Codex.Contracts.AssemblyInfoInputs.cache
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\Codex.Contracts.AssemblyInfo.cs
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\Codex.Contracts.csproj.CoreCompileInputs.cache
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\Codex.Contracts.sourcelink.json
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\Codex.Contracts.dll
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\refint\Codex.Contracts.dll
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\Codex.Contracts.pdb
+C:\Users\Alex Lucero\source\repos\codex\src\Codex.Contracts\obj\Debug\net10.0\ref\Codex.Contracts.dll
