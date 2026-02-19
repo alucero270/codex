@@ -1,0 +1,126 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: codex-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - codex-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  codex-api:
+    container_name: codex-api
+    build:
+      context: ..
+      dockerfile: ops/Dockerfile.api
+    image: codex-api:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        until (echo > /dev/tcp/postgres/5432) >/dev/null 2>&1; do
+          echo "Waiting for postgres on postgres:5432..."
+          sleep 2
+        done
+        echo "Postgres reachable, starting Codex.Api"
+        exec dotnet Codex.Api.dll
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Default: ${CODEX_DB_CONNECTION_STRING}
+      Codex__DocsRootPath: ${CODEX_DOCS_ROOT_PATH}
+    ports:
+      - "${CODEX_API_PORT:-8080}:8080"
+    volumes:
+      - type: bind
+        source: ${ATLAS_DOCS_HOST_PATH}
+        target: ${ATLAS_DOCS_CONTAINER_PATH}
+        read_only: true
+
+  codex-indexer:
+    container_name: codex-indexer
+    build:
+      context: ..
+      dockerfile: ops/Dockerfile.indexer
+    image: codex-indexer:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        until (echo > /dev/tcp/postgres/5432) >/dev/null 2>&1; do
+          echo "Waiting for postgres on postgres:5432..."
+          sleep 2
+        done
+        echo "Postgres reachable, starting Codex.Indexer"
+        exec dotnet Codex.Indexer.dll
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__Default: ${CODEX_DB_CONNECTION_STRING}
+      Codex__DocsRootPath: ${CODEX_DOCS_ROOT_PATH}
+    volumes:
+      - type: bind
+        source: ${ATLAS_DOCS_HOST_PATH}
+        target: ${ATLAS_DOCS_CONTAINER_PATH}
+        read_only: true
+
+  codex-embedder:
+    container_name: codex-embedder
+    build:
+      context: ..
+      dockerfile: ops/Dockerfile.embedder
+    image: codex-embedder:local
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint:
+      - /bin/bash
+      - -ec
+      - |
+        until (echo > /dev/tcp/postgres/5432) >/dev/null 2>&1; do
+          echo "Waiting for postgres on postgres:5432..."
+          sleep 2
+        done
+        echo "Postgres reachable, starting Codex.Embedder"
+        exec dotnet Codex.Embedder.dll
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__Default: ${CODEX_DB_CONNECTION_STRING}
+      Codex__DocsRootPath: ${CODEX_DOCS_ROOT_PATH}
+    volumes:
+      - type: bind
+        source: ${ATLAS_DOCS_HOST_PATH}
+        target: ${ATLAS_DOCS_CONTAINER_PATH}
+        read_only: true
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: codex-ollama
+    profiles: ["ollama"]
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  codex-postgres-data:
+  ollama-data:
