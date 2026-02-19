@@ -22,13 +22,10 @@ No line may exceed 100 characters.
 
 ## Commit Message Format
 
-<type>(<scope>): <subject>
-
-<BLANK LINE>
-<body>
-
-<BLANK LINE>
-<footer>
+| type(scope): subject |
+| ---- |
+| Body |
+| Footer |
 
 The header is mandatory.
 The scope is optional but strongly recommended.
