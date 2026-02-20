@@ -32,6 +32,7 @@ builder.Services.AddSingleton(new CodexSettings(docsRoot));
 // Minimal data access for issue scope: parameterized SQL through Npgsql.
 builder.Services.AddSingleton(_ => new NpgsqlDataSourceBuilder(connectionString).Build());
 builder.Services.AddScoped<IndexJobsStore>();
+builder.Services.AddScoped<SearchStore>();
 
 var app = builder.Build();
 
