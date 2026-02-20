@@ -82,6 +82,59 @@ Expected:
 - `worker_id` is not null
 - `error_message` is null
 
+## Verifying Markdown Sync (Create/Edit/Delete)
+
+Expected mount path:
+
+- Atlas docs are mounted to `/atlas` in containers
+- `CODEX_DOCS_ROOT_PATH` should be `/atlas`
+
+Scanner behavior:
+
+- Only `*.md` files are indexed (case-insensitive extension match)
+- `title` uses first markdown heading, or file name when no heading exists
+- Row updates occur only when file checksum changes
+
+Create markdown file and verify row insert:
+
+```powershell
+$testFile = "docs/__sync-test.md"
+Set-Content -Path $testFile -Value "# Sync Test`nVersion 1"
+Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
+  -ContentType "application/json" -Body "{}" | Out-Null
+Start-Sleep -Seconds 3
+$query = "SELECT path, title, checksum FROM documents " +
+  "WHERE path='__sync-test.md';"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c $query
+```
+
+Edit file and verify checksum change:
+
+```powershell
+Set-Content -Path $testFile -Value "# Sync Test`nVersion 2"
+Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
+  -ContentType "application/json" -Body "{}" | Out-Null
+Start-Sleep -Seconds 3
+$query = "SELECT path, checksum, updated_at FROM documents " +
+  "WHERE path='__sync-test.md';"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c $query
+```
+
+Delete file and verify row removal:
+
+```powershell
+Remove-Item -Path $testFile
+Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
+  -ContentType "application/json" -Body "{}" | Out-Null
+Start-Sleep -Seconds 3
+$query = "SELECT COUNT(*) AS remaining FROM documents " +
+  "WHERE path='__sync-test.md';"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c $query
+```
+
 ## Postgres Not Healthy
 
 Symptoms:

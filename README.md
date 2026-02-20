@@ -165,6 +165,63 @@ Expected:
 - `worker_id` is populated
 - `error_message` is `NULL`
 
+### Verify Markdown Sync (Create/Edit/Delete)
+
+Atlas docs are expected at `/atlas` inside containers (`CODEX_DOCS_ROOT_PATH=/atlas`).
+The `documents.path` value is stored relative to that root using `/` separators.
+
+Scanner behavior:
+
+- Only `*.md` files are indexed (case-insensitive extension match)
+- `title` uses first markdown heading, or file name when no heading exists
+- Row updates occur only when file checksum changes
+
+Create a markdown file and trigger indexing:
+
+```powershell
+$testFile = "docs/__sync-test.md"
+Set-Content -Path $testFile -Value "# Sync Test`nVersion 1"
+Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
+  -ContentType "application/json" -Body "{}" | Out-Null
+Start-Sleep -Seconds 3
+$query = "SELECT path, title, checksum FROM documents " +
+  "WHERE path='__sync-test.md';"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c $query
+```
+
+Edit the same file and trigger indexing again:
+
+```powershell
+Set-Content -Path $testFile -Value "# Sync Test`nVersion 2"
+Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
+  -ContentType "application/json" -Body "{}" | Out-Null
+Start-Sleep -Seconds 3
+$query = "SELECT path, checksum, updated_at FROM documents " +
+  "WHERE path='__sync-test.md';"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c $query
+```
+
+Delete the file and trigger indexing one more time:
+
+```powershell
+Remove-Item -Path $testFile
+Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
+  -ContentType "application/json" -Body "{}" | Out-Null
+Start-Sleep -Seconds 3
+$query = "SELECT COUNT(*) AS remaining FROM documents " +
+  "WHERE path='__sync-test.md';"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c $query
+```
+
+Expected:
+
+- Create inserts one row for `__sync-test.md`
+- Edit changes the stored checksum
+- Delete removes the row (`remaining = 0`)
+
 ### Optional Ollama Profile
 
 ```powershell

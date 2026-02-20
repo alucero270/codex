@@ -1,11 +1,13 @@
 using Codex.Indexer.Configuration;
 using Codex.Indexer.Data;
+using Codex.Indexer.Indexing;
 
 namespace Codex.Indexer;
 
 public sealed class Worker(
     ILogger<Worker> logger,
     IServiceScopeFactory scopeFactory,
+    MarkdownDocumentScanner scanner,
     CodexSettings settings) : BackgroundService
 {
     private readonly string _workerId =
@@ -42,9 +44,11 @@ public sealed class Worker(
     private async Task PollOnceAsync(CancellationToken cancellationToken)
     {
         using var scope = scopeFactory.CreateScope();
-        var store = scope.ServiceProvider.GetRequiredService<IndexJobsStore>();
+        var indexJobsStore = scope.ServiceProvider.GetRequiredService<IndexJobsStore>();
+        var documentsStore = scope.ServiceProvider.GetRequiredService<DocumentsStore>();
 
-        var claimedJob = await store.ClaimNextPendingJobAsync(_workerId, cancellationToken);
+        var claimedJob =
+            await indexJobsStore.ClaimNextPendingJobAsync(_workerId, cancellationToken);
         if (claimedJob is null)
         {
             await Task.Delay(_pollInterval, cancellationToken);
@@ -56,8 +60,8 @@ public sealed class Worker(
 
         try
         {
-            await ProcessClaimedJobAsync(claimedJob, cancellationToken);
-            await store.MarkJobCompletedAsync(claimedJob.Id, cancellationToken);
+            await ProcessClaimedJobAsync(claimedJob, documentsStore, cancellationToken);
+            await indexJobsStore.MarkJobCompletedAsync(claimedJob.Id, cancellationToken);
             logger.LogInformation("Completed index job {JobId}", claimedJob.Id);
         }
         catch (Exception ex)
@@ -69,13 +73,14 @@ public sealed class Worker(
                 errorMessage = errorMessage[..1000];
             }
 
-            await store.MarkJobFailedAsync(claimedJob.Id, errorMessage, cancellationToken);
+            await indexJobsStore.MarkJobFailedAsync(claimedJob.Id, errorMessage, cancellationToken);
             logger.LogError(ex, "Failed index job {JobId}", claimedJob.Id);
         }
     }
 
-    private Task ProcessClaimedJobAsync(
+    private async Task ProcessClaimedJobAsync(
         ClaimedIndexJob claimedJob,
+        DocumentsStore documentsStore,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -87,8 +92,18 @@ public sealed class Worker(
                 $"Configured docs root '{settings.DocsRoot}' does not exist.");
         }
 
-        logger.LogDebug("Processed placeholder indexing for job {JobId}.", claimedJob.Id);
+        var scannedDocuments = await scanner.ScanAsync(settings.DocsRoot, cancellationToken);
+        var syncResult =
+            await documentsStore.SyncDocumentsAsync(scannedDocuments, cancellationToken);
 
-        return Task.CompletedTask;
+        logger.LogInformation(
+            "Synced markdown documents for job {JobId}: scanned {ScannedCount}, upserted " +
+            "{UpsertedCount}, deleted {DeletedCount}",
+            claimedJob.Id,
+            syncResult.ScannedCount,
+            syncResult.UpsertedCount,
+            syncResult.DeletedCount);
+
+        logger.LogDebug("Processed indexing work for job {JobId}.", claimedJob.Id);
     }
 }
