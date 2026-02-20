@@ -26,3 +26,8 @@ Content-Type: application/json
 }
 
 ###
+
+GET {{Codex.Api_HostAddress}}/api/documents/1
+Accept: application/json
+
+###

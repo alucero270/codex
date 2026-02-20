@@ -82,6 +82,28 @@ Request contract:
 - `limit` optional, default 10, bounded to 1..50
 - response result fields: `path`, `title`, `snippet`, `rank`
 
+## Verifying Document Endpoint
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/documents/1 -Method Get
+try {
+  Invoke-WebRequest -Uri http://localhost:8080/api/documents/999999 -Method Get -UseBasicParsing
+} catch {
+  $_.Exception.Response.StatusCode.value__
+}
+```
+
+```bash
+curl -sS "http://localhost:8080/api/documents/1"
+curl -i "http://localhost:8080/api/documents/999999"
+```
+
+Expected:
+
+- existing ids return `200`
+- missing ids return `404`
+- payload includes `id`, `path`, `title`, `content`, `updatedAt`
+
 ## Verifying Indexer Claim Loop
 
 Create one pending job and capture id:
