@@ -2,4 +2,8 @@
 /.vs
 **/bin/
 **/obj/
+**/node_modules/
+**/dist/
+src/Codex.Web/.env.local
+src/Codex.Web/.env.*.local
 ops/.env
