@@ -53,6 +53,35 @@ Expected:
 - POST returns `201`
 - GET returns `200` for created id
 
+## Verifying Indexer Claim Loop
+
+Create one pending job and capture id:
+
+```powershell
+$jobId = docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -Atc "INSERT INTO index_jobs (status) VALUES ('pending') RETURNING id;" |
+  Select-Object -First 1
+$jobId
+```
+
+Wait a few seconds, then confirm claim/completion fields:
+
+```powershell
+docker compose -f ops/docker-compose.yml --env-file ops/.env logs --tail 80 codex-indexer
+$query = "SELECT id, status, claimed_at, completed_at, worker_id, error_message " +
+  "FROM index_jobs WHERE id = $jobId;"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c $query
+```
+
+Expected:
+
+- `status = completed`
+- `claimed_at` is not null
+- `completed_at` is not null
+- `worker_id` is not null
+- `error_message` is null
+
 ## Postgres Not Healthy
 
 Symptoms:
@@ -130,3 +159,16 @@ docker compose -f ops/docker-compose.yml --env-file ops/.env logs codex-api
 docker compose -f ops/docker-compose.yml --env-file ops/.env logs codex-indexer
 docker compose -f ops/docker-compose.yml --env-file ops/.env logs codex-embedder
 ```
+
+## Indexer Fails On Missing Docs Root
+
+Symptoms:
+
+- indexer logs `Configured docs root '...' does not exist.`
+- jobs move to `failed` with an `error_message`
+
+Fix:
+
+- Verify `CODEX_DOCS_ROOT_PATH` in `ops/.env`
+- Ensure the Atlas bind mount in compose points to an existing host path
+- Confirm the same path exists inside container (`/atlas` by default)
