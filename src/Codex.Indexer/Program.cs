@@ -1,6 +1,7 @@
 using Codex.Indexer;
 using Codex.Indexer.Configuration;
 using Codex.Indexer.Data;
+using Codex.Indexer.Indexing;
 using Npgsql;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -33,6 +34,8 @@ if (pollIntervalSeconds < 1)
 builder.Services.AddSingleton(new CodexSettings(docsRoot, pollIntervalSeconds));
 // Reuse one pool-backed datasource for the process lifetime.
 builder.Services.AddSingleton(_ => new NpgsqlDataSourceBuilder(connectionString).Build());
+builder.Services.AddSingleton<MarkdownDocumentScanner>();
+builder.Services.AddScoped<DocumentsStore>();
 builder.Services.AddScoped<IndexJobsStore>();
 builder.Services.AddHostedService<Worker>();
 
