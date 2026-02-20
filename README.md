@@ -80,12 +80,38 @@ Copy-Item .env.example .env
 docker compose up -d --build
 ```
 
+### Apply Phase 1 Migrations
+
+Run from the `ops` directory:
+
+```powershell
+Get-Content -Raw migrations/001_extensions.sql |
+  docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U codex -d codex
+Get-Content -Raw migrations/002_documents.sql |
+  docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U codex -d codex
+Get-Content -Raw migrations/003_jobs.sql |
+  docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U codex -d codex
+```
+
+These migrations are idempotent and safe to re-run.
+
 ### Verify
 
 ```powershell
 docker compose -f ops/docker-compose.yml --env-file ops/.env ps
 Invoke-WebRequest http://localhost:8080/weatherforecast -UseBasicParsing
 docker compose -f ops/docker-compose.yml --env-file ops/.env logs --tail 50
+```
+
+Verify schema objects:
+
+```powershell
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c "SELECT to_regclass('public.documents');"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c "SELECT to_regclass('public.index_jobs');"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c "SELECT extname FROM pg_extension WHERE extname='vector';"
 ```
 
 Expected results:
