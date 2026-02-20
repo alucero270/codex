@@ -159,7 +159,7 @@ Request contract:
 
 - `query` required, max 500 chars
 - `limit` optional, default 10, bounded to 1..50
-- Response fields per result: `path`, `title`, `snippet`, `rank`
+- Response fields per result: `id`, `path`, `title`, `snippet`, `rank`
 
 Verify document API:
 
@@ -270,6 +270,43 @@ Expected:
 - Create inserts one row for `__sync-test.md`
 - Edit changes the stored checksum
 - Delete removes the row (`remaining = 0`)
+
+## Web UI (Codex.Web)
+
+Run the React + TypeScript UI locally:
+
+```powershell
+cd src/Codex.Web
+npm install
+```
+
+Set API base URL (defaults to `http://localhost:8080` if omitted):
+
+```powershell
+Copy-Item .env.example .env.local
+# Optional: edit .env.local if your API is on a different host/port.
+```
+
+Start the dev server:
+
+```powershell
+npm run dev
+```
+
+The UI provides:
+
+- Search input and submit (`POST /api/search`)
+- Ranked results list with loading/error/empty states
+- Click result to load document view (`GET /api/documents/{id}`)
+- Markdown displayed as plain text for MVP (no markdown renderer dependency)
+
+Quick API smoke checks before opening the UI:
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/search -Method Post `
+  -ContentType "application/json" -Body '{"query":"local development","limit":5}'
+Invoke-RestMethod -Uri http://localhost:8080/api/documents/1 -Method Get
+```
 
 ### Optional Ollama Profile
 

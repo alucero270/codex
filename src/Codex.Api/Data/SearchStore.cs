@@ -11,6 +11,7 @@ public sealed class SearchStore(NpgsqlDataSource dataSource)
             SELECT websearch_to_tsquery('english', @query) AS ts_query
         )
         SELECT
+            d.id,
             d.path,
             d.title,
             ts_rank_cd(d.search_vector, parsed_query.ts_query)::double precision AS rank,
@@ -44,6 +45,7 @@ public sealed class SearchStore(NpgsqlDataSource dataSource)
         {
             results.Add(
                 new SearchResult(
+                    Id: reader.GetInt64(reader.GetOrdinal("id")),
                     Path: reader.GetString(reader.GetOrdinal("path")),
                     Title: reader.GetString(reader.GetOrdinal("title")),
                     Snippet: reader.GetString(reader.GetOrdinal("snippet")),
