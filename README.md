@@ -138,6 +138,33 @@ Current note:
 - `/weatherforecast` is the temporary health check endpoint.
 - Add a dedicated `/health` endpoint in a follow-up API task.
 
+### Verify Indexer Claim Loop (Issue #9)
+
+Create a pending job and capture the new id:
+
+```powershell
+$jobId = docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -Atc "INSERT INTO index_jobs (status) VALUES ('pending') RETURNING id;"
+$jobId
+```
+
+Confirm the worker claimed and completed it:
+
+```powershell
+docker compose -f ops/docker-compose.yml --env-file ops/.env logs --tail 80 codex-indexer
+$query = "SELECT id, status, claimed_at, completed_at, worker_id, error_message " +
+  "FROM index_jobs WHERE id = $jobId;"
+docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
+  psql -U codex -d codex -c $query
+```
+
+Expected:
+
+- `status = completed`
+- `claimed_at` and `completed_at` are populated
+- `worker_id` is populated
+- `error_message` is `NULL`
+
 ### Optional Ollama Profile
 
 ```powershell
