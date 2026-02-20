@@ -4,3 +4,15 @@ GET {{Codex.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+POST {{Codex.Api_HostAddress}}/api/index-jobs
+Content-Type: application/json
+
+{}
+
+###
+
+GET {{Codex.Api_HostAddress}}/api/index-jobs/1
+Accept: application/json
+
+###

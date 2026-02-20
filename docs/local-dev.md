@@ -37,6 +37,22 @@ docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
   psql -U codex -d codex -c "SELECT to_regclass('public.ix_documents_search_vector');"
 ```
 
+## Verifying Index Job Endpoints
+
+```powershell
+$create = Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs `
+  -Method Post -ContentType "application/json" -Body "{}"
+$create.StatusCode
+$job = $create.Content | ConvertFrom-Json
+Invoke-WebRequest -Uri "http://localhost:8080/api/index-jobs/$($job.id)" `
+  -Method Get -UseBasicParsing
+```
+
+Expected:
+
+- POST returns `201`
+- GET returns `200` for created id
+
 ## Postgres Not Healthy
 
 Symptoms:

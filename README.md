@@ -114,11 +114,24 @@ docker compose -f ops/docker-compose.yml --env-file ops/.env exec -T postgres `
   psql -U codex -d codex -c "SELECT extname FROM pg_extension WHERE extname='vector';"
 ```
 
+Verify index job API endpoints:
+
+```powershell
+$create = Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs `
+  -Method Post -ContentType "application/json" -Body "{}"
+$create.StatusCode
+$job = $create.Content | ConvertFrom-Json
+Invoke-WebRequest -Uri "http://localhost:8080/api/index-jobs/$($job.id)" `
+  -Method Get -UseBasicParsing
+```
+
 Expected results:
 
 - `codex-postgres` is `healthy`
 - `codex-api`, `codex-indexer`, and `codex-embedder` are `Up`
 - `/weatherforecast` returns HTTP 200
+- `POST /api/index-jobs` returns `201 Created`
+- `GET /api/index-jobs/{id}` returns `200 OK` for existing ids
 
 Current note:
 
