@@ -28,6 +28,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Ensure postgres is accepting TCP connections before starting the API.
     entrypoint:
       - /bin/bash
       - -ec
@@ -46,6 +47,7 @@ services:
     ports:
       - "${CODEX_API_PORT:-8080}:8080"
     volumes:
+      # Atlas docs are mounted read-only by design.
       - type: bind
         source: ${ATLAS_DOCS_HOST_PATH}
         target: ${ATLAS_DOCS_CONTAINER_PATH}
@@ -61,6 +63,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Ensure postgres is accepting TCP connections before starting the worker.
     entrypoint:
       - /bin/bash
       - -ec
@@ -76,6 +79,7 @@ services:
       ConnectionStrings__Default: ${CODEX_DB_CONNECTION_STRING}
       Codex__DocsRootPath: ${CODEX_DOCS_ROOT_PATH}
     volumes:
+      # Atlas docs are mounted read-only by design.
       - type: bind
         source: ${ATLAS_DOCS_HOST_PATH}
         target: ${ATLAS_DOCS_CONTAINER_PATH}
@@ -91,6 +95,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Ensure postgres is accepting TCP connections before starting the worker.
     entrypoint:
       - /bin/bash
       - -ec
@@ -106,6 +111,7 @@ services:
       ConnectionStrings__Default: ${CODEX_DB_CONNECTION_STRING}
       Codex__DocsRootPath: ${CODEX_DOCS_ROOT_PATH}
     volumes:
+      # Atlas docs are mounted read-only by design.
       - type: bind
         source: ${ATLAS_DOCS_HOST_PATH}
         target: ${ATLAS_DOCS_CONTAINER_PATH}
