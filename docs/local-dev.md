@@ -53,6 +53,35 @@ Expected:
 - POST returns `201`
 - GET returns `200` for created id
 
+## Verifying Search Endpoint
+
+```powershell
+$body = @{
+  query = "index jobs postgres"
+  limit = 10
+} | ConvertTo-Json
+Invoke-RestMethod -Uri http://localhost:8080/api/search -Method Post `
+  -ContentType "application/json" -Body $body
+```
+
+```bash
+curl -sS -X POST "http://localhost:8080/api/search" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"index jobs postgres","limit":10}'
+```
+
+Expected:
+
+- response is `200`
+- results are ranked
+- snippets include `<mark>` highlights
+
+Request contract:
+
+- `query` required, max 500 chars
+- `limit` optional, default 10, bounded to 1..50
+- response result fields: `path`, `title`, `snippet`, `rank`
+
 ## Verifying Indexer Claim Loop
 
 Create one pending job and capture id:

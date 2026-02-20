@@ -16,3 +16,13 @@ GET {{Codex.Api_HostAddress}}/api/index-jobs/1
 Accept: application/json
 
 ###
+
+POST {{Codex.Api_HostAddress}}/api/search
+Content-Type: application/json
+
+{
+  "query": "docker compose postgres",
+  "limit": 10
+}
+
+###

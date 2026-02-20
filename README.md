@@ -133,6 +133,34 @@ Expected results:
 - `POST /api/index-jobs` returns `201 Created`
 - `GET /api/index-jobs/{id}` returns `200 OK` for existing ids
 
+Verify search API:
+
+```powershell
+$body = @{
+  query = "index jobs postgres"
+  limit = 10
+} | ConvertTo-Json
+Invoke-RestMethod -Uri http://localhost:8080/api/search -Method Post `
+  -ContentType "application/json" -Body $body
+```
+
+```bash
+curl -sS -X POST "http://localhost:8080/api/search" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"index jobs postgres","limit":10}'
+```
+
+Expected search response:
+
+- Results are ordered by relevance rank descending, then path ascending
+- `snippet` includes highlighted `<mark>...</mark>` matches
+
+Request contract:
+
+- `query` required, max 500 chars
+- `limit` optional, default 10, bounded to 1..50
+- Response fields per result: `path`, `title`, `snippet`, `rank`
+
 Current note:
 
 - `/weatherforecast` is the temporary health check endpoint.
