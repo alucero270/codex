@@ -161,6 +161,27 @@ Request contract:
 - `limit` optional, default 10, bounded to 1..50
 - Response fields per result: `path`, `title`, `snippet`, `rank`
 
+Verify document API:
+
+```powershell
+Invoke-RestMethod -Uri http://localhost:8080/api/documents/1 -Method Get
+try {
+  Invoke-WebRequest -Uri http://localhost:8080/api/documents/999999 -Method Get -UseBasicParsing
+} catch {
+  $_.Exception.Response.StatusCode.value__
+}
+```
+
+```bash
+curl -sS "http://localhost:8080/api/documents/1"
+curl -i "http://localhost:8080/api/documents/999999"
+```
+
+Expected document response:
+
+- `200` for existing ids, `404` for missing ids
+- Includes `id`, `path`, `title`, `content`, and `updatedAt`
+
 Current note:
 
 - `/weatherforecast` is the temporary health check endpoint.
