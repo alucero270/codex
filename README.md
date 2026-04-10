@@ -1,37 +1,98 @@
 # Strata
 
-Strata is a self-hosted knowledge ingestion and retrieval platform.
+Strata is a self-hosted knowledge ingestion and retrieval system for internal
+content with explicit source boundaries and no required AI layer.
 
-Strata is valuable without AI. AI can improve retrieval quality and downstream
-workflows, but the product must remain useful when only filesystem ingestion,
-metadata storage, and full-text retrieval are enabled.
+Strata is designed to be useful with filesystem ingestion, metadata storage,
+and full-text retrieval alone. AI is an optional enhancement path, not a
+prerequisite for core product value.
 
-## What Strata Does
+## The Problem
 
-- Ingests documents from explicitly configured source roots
-- Indexes document content and metadata into PostgreSQL
-- Serves API-first retrieval for search, document access, and indexing workflows
-- Runs in Docker for local and controlled-environment deployments
+Teams store important knowledge across shared folders, docs, and internal
+artifacts, but retrieving the right information quickly is still harder than it
+should be.
+
+Many tools make that problem worse by:
+
+- blurring where data came from
+- hiding boundary and safety assumptions
+- making AI a requirement instead of an enhancement
+
+Strata is intended to provide a more controlled foundation: explicit sources,
+predictable ingestion, and traceable retrieval.
+
+## Current Product Slice
+
+The current repository implements a focused early slice of the product:
+
+- filesystem-based ingestion from an explicitly configured source root
+- markdown scanning with checksum-based sync into PostgreSQL
+- asynchronous indexing through index-job endpoints and a background worker
+- full-text search through the HTTP API
+- document read access through the HTTP API
+- a minimal web UI for search and document viewing
+- Docker-based local and controlled-environment deployment
+
+This is the current implemented slice, not the full product roadmap.
 
 ## Core Principles
 
 - AI is optional, not foundational
-- Source boundaries are explicit and enforced by configuration
-- Source content is mounted read-only and is never edited in place
-- Retrieval must remain fast, predictable, and traceable
+- source boundaries are explicit and server-controlled
+- source content is mounted read-only and is never edited in place
+- retrieval should remain fast, predictable, and traceable
 
-## Quick Start
+## What Strata Is Not
 
-1. Copy `.env.example` to `.env`
-2. Set `STRATA_SOURCES` to a readable source directory on the host
-3. Review `POSTGRES_*`, `STRATA_DB_CONNECTION`, and optional embedding settings
+- not a chat-first interface
+- not an AI-dependent product
+- not a document editor
+- not a general-purpose note-taking platform
+
+Strata is a retrieval foundation for controlled internal knowledge access.
+
+## Current Scope and Known Gaps
+
+Today, Strata is still early and intentionally narrow.
+
+Implemented now:
+
+- one configured filesystem source boundary per deployment
+- markdown ingestion and indexing
+- retrieval APIs for search, document reads, and indexing jobs
+- product-facing Docker and environment configuration
+
+Planned or still maturing:
+
+- first-class multi-source modeling and source management APIs
+- stronger runtime boundary hardening, including symlink escape protection
+- richer retrieval metadata, filtering, and pagination
+- health endpoints, broader verification coverage, and more complete operator runbooks
+- optional AI enhancement, additional connectors, and multi-user access control
+
+## Architecture
+
+Current flow:
+
+`Configured source root -> Indexer -> PostgreSQL -> Retrieval API -> Web UI`
+
+Planned expansion follows the milestone roadmap in
+[`docs/milestones.md`](docs/milestones.md).
+
+## Getting Started
+
+1. Copy `.env.example` to `.env`.
+2. Set `STRATA_SOURCES` to a readable host directory that Strata is allowed to ingest.
+3. Review `POSTGRES_*`, `STRATA_DB_CONNECTION`, `STRATA_API_PORT`, and optional embedding settings.
 4. Start the stack:
 
 ```powershell
 docker compose -f ops/docker-compose.yml --env-file .env up -d --build
 ```
 
-5. Apply the SQL migrations in [`docs/operations.md`](docs/operations.md)
+5. Apply the SQL migrations described in [`docs/operations.md`](docs/operations.md).
+6. Verify the stack and smoke-test retrieval using the commands in [`docs/operations.md`](docs/operations.md).
 
 ## Documentation
 
@@ -45,10 +106,16 @@ docker compose -f ops/docker-compose.yml --env-file .env up -d --build
 - [`docs/milestones.md`](docs/milestones.md)
 - [`docs/adr/ADR-001-project-identity.md`](docs/adr/ADR-001-project-identity.md)
 
-## Current Implementation Notes
+## Roadmap
 
-- The repository still contains internal `Codex.*` project names and namespaces
-  during the transition to Strata
-- Product-facing docs, configuration, and deployment now use the Strata identity
-- The optional embedder and Ollama profile remain enhancement paths, not
-  prerequisites for search and retrieval
+- Milestone 2: source-aware ingestion and source-boundary hardening
+- Milestone 3: richer retrieval behavior, provenance, and stable API contracts
+- Milestone 4: optional AI-enhanced retrieval without breaking the non-AI baseline
+- Milestone 5: connectors beyond filesystem ingestion
+- Milestone 6: authenticated, source-scoped organizational usage
+
+## Implementation Notes
+
+- internal project names still use `Codex.*` in several runtime paths during the transition to Strata
+- product-facing docs and environment configuration already use the Strata identity
+- optional embedding infrastructure remains additive and should not be required for baseline retrieval
