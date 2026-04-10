@@ -11,6 +11,7 @@ assignees: alucero270
 
 What needs to be done?
 Keep this short and concrete.
+This issue should describe exactly one reviewable change.
 
 ---
 
@@ -25,6 +26,8 @@ Keep this short and concrete.
   - `path/to/file.cs`
   - `ops/docker-compose.yml`
 
+Keep the scope narrow. Do not combine unrelated work in one issue.
+
 ---
 
 ## Acceptance Criteria
@@ -36,6 +39,7 @@ What must exist or be true for this to be considered done?
 - [ ] Condition 3
 
 All criteria must be objectively verifiable.
+The issue should be closable by one pull request.
 
 ---
 

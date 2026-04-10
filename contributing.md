@@ -107,18 +107,48 @@ BREAKING CHANGE:
 # Branching Strategy
 
 - One branch per issue
-- Branch name format: `issue/<number>-short-description`
+- Branch name format: `feature/<number>-short-description`
 - Merge via Pull Request
 - Squash only if commits are noisy
 - Do not push directly to `main`
 
 # Issue Workflow
 
-Every change should map to a single GitHub issue with:
+Every change starts from exactly one GitHub issue.
+
+The issue must stay narrowly scoped and include:
 
 - Summary
 - Scope
 - Acceptance Criteria
 - Notes (optional)
 
-Keep pull requests small, reviewable, and aligned to one issue at a time.
+Do not bundle unrelated work under one issue. If the work splits into multiple
+independent changes, create separate issues and branches.
+
+## Delivery Flow
+
+Use the following workflow for every contribution:
+
+1. Create or choose one GitHub issue.
+2. Confirm the issue stays narrow enough to review in one pull request.
+3. Branch from `main` using `feature/<number>-short-description`.
+4. Implement only the work required for that issue.
+5. Run the smallest relevant local validation before pushing.
+6. Push the branch and open a pull request against `main`.
+7. Reference the issue in the pull request and commit footer using
+   `Closes #<number>` when the change completes the issue.
+
+## Pull Request Expectations
+
+Every pull request should map to a single GitHub issue and should remain small,
+reviewable, and honest about what is implemented now versus what is only
+roadmap work.
+
+Pull requests should:
+
+- summarize what changed
+- explain why it changed
+- list the validation used
+- call out follow-up work separately instead of bundling it
+- avoid overstating readiness, feature completeness, or future roadmap items
