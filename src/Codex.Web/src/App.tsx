@@ -1,3 +1,5 @@
+"use client";
+
 import { FormEvent, Fragment, ReactNode, useMemo, useState } from "react";
 import { DocumentResponse, SearchResult, getDocumentById, searchDocuments } from "./api";
 

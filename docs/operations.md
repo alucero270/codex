@@ -24,6 +24,15 @@ not be treated as a production secret-management solution.
 
 Use `.env.example` as the shareable template for new environments.
 
+### `src/Codex.Web/.env.example`
+
+Use `src/Codex.Web/.env.example` as the local web-shell template when running
+the frontend outside Docker.
+
+Key variable:
+
+- `NEXT_PUBLIC_STRATA_API_BASE_URL`
+
 ## Configuring Sources
 
 - Set `STRATA_SOURCES` to the host path Strata is allowed to ingest
@@ -105,6 +114,32 @@ Create an indexing job:
 Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
   -ContentType "application/json" -Body "{}"
 ```
+
+## Web Shell
+
+The current web shell runs on Next.js and continues to call the Strata API
+directly.
+
+Local web workflow:
+
+```powershell
+Set-Location src/Codex.Web
+Copy-Item .env.example .env.local
+npm install
+npm run dev
+```
+
+Production-style build verification:
+
+```powershell
+Set-Location src/Codex.Web
+npm install
+npm run build
+```
+
+Set `NEXT_PUBLIC_STRATA_API_BASE_URL` to the Strata API origin you want the web
+shell to call. This remains an explicit API endpoint setting and does not
+change Strata's source-boundary model.
 
 ## Operational Notes
 
