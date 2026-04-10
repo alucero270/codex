@@ -97,6 +97,12 @@ docker compose -f ops/docker-compose.yml --env-file .env ps
 docker compose -f ops/docker-compose.yml --env-file .env logs --tail 100
 ```
 
+Verify API readiness:
+
+```powershell
+Invoke-WebRequest -Uri http://localhost:8080/health
+```
+
 Smoke-test search:
 
 ```powershell
@@ -126,7 +132,7 @@ This validation entry point runs:
 - `dotnet build Codex.slnx`
 - `npm install` and `npm run build` in `src/Codex.Web`
 - `docker compose ... config` against the repository-root `.env`
-- a local API boot probe against the current development OpenAPI endpoint
+- a local API boot probe against `GET /health`
 
 ## Web Shell
 
@@ -153,6 +159,13 @@ npm run build
 Set `NEXT_PUBLIC_STRATA_API_BASE_URL` to the Strata API origin you want the web
 shell to call. This remains an explicit API endpoint setting and does not
 change Strata's source-boundary model.
+
+Web-to-API connectivity check:
+
+- confirm `NEXT_PUBLIC_STRATA_API_BASE_URL` points to the same API origin that
+  returns `200 OK` from `/health`
+- after the web shell starts, run a search and confirm the browser can reach
+  `POST /api/search` on that API origin without network or CORS errors
 
 ## Operational Notes
 
