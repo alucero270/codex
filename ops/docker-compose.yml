@@ -1,7 +1,7 @@
 services:
   postgres:
     image: pgvector/pgvector:pg17
-    container_name: codex-postgres
+    container_name: strata-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -10,7 +10,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - codex-postgres-data:/var/lib/postgresql/data
+      - strata-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -18,12 +18,12 @@ services:
       retries: 10
       start_period: 5s
 
-  codex-api:
-    container_name: codex-api
+  strata-api:
+    container_name: strata-api
     build:
       context: ..
       dockerfile: ops/Dockerfile.api
-    image: codex-api:local
+    image: strata-api:local
     restart: unless-stopped
     depends_on:
       postgres:
@@ -37,28 +37,29 @@ services:
           echo "Waiting for postgres on postgres:5432..."
           sleep 2
         done
-        echo "Postgres reachable, starting Codex.Api"
+        echo "Postgres reachable, starting Strata API"
         exec dotnet Codex.Api.dll
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__Default: ${CODEX_DB_CONNECTION_STRING}
-      Codex__DocsRootPath: ${CODEX_DOCS_ROOT_PATH}
+      ConnectionStrings__Default: ${STRATA_DB_CONNECTION}
+      Codex__DocsRootPath: ${STRATA_SOURCES}
+      Logging__LogLevel__Default: ${STRATA_LOG_LEVEL:-Information}
     ports:
-      - "${CODEX_API_PORT:-8080}:8080"
+      - "${STRATA_API_PORT:-8080}:8080"
     volumes:
-      # Atlas docs are mounted read-only by design.
+      # Sources stay read-only so Strata cannot mutate upstream content.
       - type: bind
-        source: ${ATLAS_DOCS_HOST_PATH}
-        target: ${ATLAS_DOCS_CONTAINER_PATH}
+        source: ${STRATA_SOURCES}
+        target: ${STRATA_SOURCES}
         read_only: true
 
-  codex-indexer:
-    container_name: codex-indexer
+  strata-indexer:
+    container_name: strata-indexer
     build:
       context: ..
       dockerfile: ops/Dockerfile.indexer
-    image: codex-indexer:local
+    image: strata-indexer:local
     restart: unless-stopped
     depends_on:
       postgres:
@@ -72,25 +73,26 @@ services:
           echo "Waiting for postgres on postgres:5432..."
           sleep 2
         done
-        echo "Postgres reachable, starting Codex.Indexer"
+        echo "Postgres reachable, starting Strata Indexer"
         exec dotnet Codex.Indexer.dll
     environment:
       DOTNET_ENVIRONMENT: Development
-      ConnectionStrings__Default: ${CODEX_DB_CONNECTION_STRING}
-      Codex__DocsRootPath: ${CODEX_DOCS_ROOT_PATH}
+      ConnectionStrings__Default: ${STRATA_DB_CONNECTION}
+      Codex__DocsRootPath: ${STRATA_SOURCES}
+      Logging__LogLevel__Default: ${STRATA_LOG_LEVEL:-Information}
     volumes:
-      # Atlas docs are mounted read-only by design.
+      # Sources stay read-only so Strata cannot mutate upstream content.
       - type: bind
-        source: ${ATLAS_DOCS_HOST_PATH}
-        target: ${ATLAS_DOCS_CONTAINER_PATH}
+        source: ${STRATA_SOURCES}
+        target: ${STRATA_SOURCES}
         read_only: true
 
-  codex-embedder:
-    container_name: codex-embedder
+  strata-embedder:
+    container_name: strata-embedder
     build:
       context: ..
       dockerfile: ops/Dockerfile.embedder
-    image: codex-embedder:local
+    image: strata-embedder:local
     restart: unless-stopped
     depends_on:
       postgres:
@@ -104,29 +106,32 @@ services:
           echo "Waiting for postgres on postgres:5432..."
           sleep 2
         done
-        echo "Postgres reachable, starting Codex.Embedder"
+        echo "Postgres reachable, starting Strata Embedder"
         exec dotnet Codex.Embedder.dll
     environment:
       DOTNET_ENVIRONMENT: Development
-      ConnectionStrings__Default: ${CODEX_DB_CONNECTION_STRING}
-      Codex__DocsRootPath: ${CODEX_DOCS_ROOT_PATH}
+      ConnectionStrings__Default: ${STRATA_DB_CONNECTION}
+      Codex__DocsRootPath: ${STRATA_SOURCES}
+      STRATA_EMBED_PROVIDER: ${STRATA_EMBED_PROVIDER}
+      STRATA_EMBED_MODEL: ${STRATA_EMBED_MODEL}
+      Logging__LogLevel__Default: ${STRATA_LOG_LEVEL:-Information}
     volumes:
-      # Atlas docs are mounted read-only by design.
+      # Sources stay read-only so Strata cannot mutate upstream content.
       - type: bind
-        source: ${ATLAS_DOCS_HOST_PATH}
-        target: ${ATLAS_DOCS_CONTAINER_PATH}
+        source: ${STRATA_SOURCES}
+        target: ${STRATA_SOURCES}
         read_only: true
 
   ollama:
     image: ollama/ollama:latest
-    container_name: codex-ollama
+    container_name: strata-ollama
     profiles: ["ollama"]
     restart: unless-stopped
     ports:
-      - "${OLLAMA_PORT:-11434}:11434"
+      - "${STRATA_OLLAMA_PORT:-11434}:11434"
     volumes:
       - ollama-data:/root/.ollama
 
 volumes:
-  codex-postgres-data:
+  strata-postgres-data:
   ollama-data:
