@@ -68,7 +68,7 @@ Planned or still maturing:
 - first-class multi-source modeling and source management APIs
 - stronger runtime boundary hardening, including symlink escape protection
 - richer retrieval metadata, filtering, and pagination
-- health endpoints, broader verification coverage, and more complete operator runbooks
+- broader verification coverage and more complete operator runbooks
 - optional AI enhancement, additional connectors, and multi-user access control
 
 ## Architecture
@@ -92,7 +92,7 @@ docker compose -f ops/docker-compose.yml --env-file .env up -d --build
 ```
 
 5. Apply the SQL migrations described in [`docs/operations.md`](docs/operations.md).
-6. Verify the stack and smoke-test retrieval using the commands in [`docs/operations.md`](docs/operations.md).
+6. Verify API readiness at `/health` and smoke-test retrieval using the commands in [`docs/operations.md`](docs/operations.md).
 
 ## Documentation
 

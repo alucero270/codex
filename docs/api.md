@@ -4,6 +4,18 @@
 
 Strata currently exposes a small HTTP API for indexing and retrieval.
 
+## `GET /health`
+
+Return a minimal readiness response for API boot verification.
+
+### Response
+
+```json
+{
+  "status": "ok"
+}
+```
+
 ## `POST /api/search`
 
 Search indexed documents using PostgreSQL full-text search.
@@ -98,4 +110,6 @@ Fetch the current status of an indexing job.
 
 - The current repository still exposes `/weatherforecast` as a temporary
   development endpoint, but it is not part of the Strata product contract
+- Use `/health` for basic readiness checks instead of temporary development
+  endpoints
 - All API behavior remains valid without optional AI services enabled

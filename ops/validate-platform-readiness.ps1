@@ -13,6 +13,17 @@ function Invoke-Step {
     Write-Host "OK: $Name" -ForegroundColor Green
 }
 
+function Assert-LastExitCode {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Message
+    )
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Message Exit code: $LASTEXITCODE."
+    }
+}
+
 function Get-FreeTcpPort {
     $listener = [System.Net.Sockets.TcpListener]::new(
         [System.Net.IPAddress]::Loopback,
@@ -92,7 +103,7 @@ function Test-ApiReadiness {
                 break
             }
 
-            & curl.exe --fail --silent --show-error "$apiUrl/openapi/v1.json" > $null
+            & curl.exe --fail --silent --show-error "$apiUrl/health" > $null
             if ($LASTEXITCODE -eq 0) {
                 $ready = $true
                 break
@@ -107,7 +118,7 @@ function Test-ApiReadiness {
             if (Test-Path $stderrLog) {
                 Get-Content $stderrLog
             }
-            throw "API readiness probe did not succeed at $apiUrl/openapi/v1.json."
+            throw "API readiness probe did not succeed at $apiUrl/health."
         }
     }
     finally {
@@ -130,12 +141,14 @@ Push-Location $repoRoot
 try {
     Invoke-Step "Build .NET solution" {
         dotnet build Codex.slnx
+        Assert-LastExitCode "dotnet build failed."
     }
 
     Invoke-Step "Install web dependencies" {
         Push-Location $webRoot
         try {
             npm install
+            Assert-LastExitCode "npm install failed."
         }
         finally {
             Pop-Location
@@ -146,6 +159,7 @@ try {
         Push-Location $webRoot
         try {
             npm run build
+            Assert-LastExitCode "npm run build failed."
         }
         finally {
             Pop-Location
@@ -158,6 +172,7 @@ try {
         }
 
         docker compose -f $composeFile --env-file $envFile config > $null
+        Assert-LastExitCode "docker compose config failed."
     }
 
     Invoke-Step "Probe API readiness" {
