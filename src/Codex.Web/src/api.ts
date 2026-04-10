@@ -22,6 +22,7 @@ export type DocumentResponse = {
 
 const apiBaseUrl =
   // Default keeps local dev simple while allowing env-based overrides per environment.
+  import.meta.env.VITE_STRATA_API_BASE_URL?.trim().replace(/\/+$/, "") ??
   import.meta.env.VITE_CODEX_API_BASE_URL?.trim().replace(/\/+$/, "") ??
   "http://localhost:8080";
 

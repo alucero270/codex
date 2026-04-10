@@ -88,9 +88,9 @@ export default function App() {
   return (
     <main className="page">
       <section className="panel">
-        <h1 className="title">Codex Search</h1>
+        <h1 className="title">Strata Search</h1>
         <p className="subtitle">
-          Search indexed Atlas markdown documents and open a document preview.
+          Search indexed knowledge artifacts and open a source-bound preview.
         </p>
 
         <form className="search-form" onSubmit={handleSearchSubmit}>
