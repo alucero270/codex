@@ -101,6 +101,7 @@ docker compose -f ops/docker-compose.yml --env-file .env up -d --build
 - [`docs/requirements.md`](docs/requirements.md)
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/data-model.md`](docs/data-model.md)
+- [`docs/feasibility.md`](docs/feasibility.md)
 - [`docs/api.md`](docs/api.md)
 - [`docs/operations.md`](docs/operations.md)
 - [`docs/milestones.md`](docs/milestones.md)
