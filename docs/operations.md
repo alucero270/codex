@@ -115,6 +115,19 @@ Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
   -ContentType "application/json" -Body "{}"
 ```
 
+Platform readiness validation:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ops/validate-platform-readiness.ps1
+```
+
+This validation entry point runs:
+
+- `dotnet build Codex.slnx`
+- `npm install` and `npm run build` in `src/Codex.Web`
+- `docker compose ... config` against the repository-root `.env`
+- a local API boot probe against the current development OpenAPI endpoint
+
 ## Web Shell
 
 The current web shell runs on Next.js and continues to call the Strata API
