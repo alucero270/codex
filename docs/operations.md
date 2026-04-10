@@ -17,6 +17,9 @@ Key variables:
 - `STRATA_EMBED_MODEL`
 - `STRATA_LOG_LEVEL`
 
+`STRATA_EMBED_PROVIDER` and `STRATA_EMBED_MODEL` are optional. Leave them blank
+unless you plan to run the AI enhancement profile.
+
 `.env` is for operator convenience. It is not secure secret storage and should
 not be treated as a production secret-management solution.
 
@@ -55,11 +58,18 @@ Copy-Item .env.example .env
 docker compose -f ops/docker-compose.yml --env-file .env up -d --build
 ```
 
-Optional AI services:
+This default command starts the core Strata stack: PostgreSQL, API, and
+indexer.
+
+Optional AI enhancement services:
 
 ```powershell
-docker compose -f ops/docker-compose.yml --env-file .env --profile ollama up -d
+docker compose -f ops/docker-compose.yml --env-file .env --profile ai up -d --build
 ```
+
+The `ai` profile adds the embedder worker and the local Ollama runtime. Leave
+that profile disabled when you only need baseline full-text ingestion and
+retrieval.
 
 Stop the stack:
 
@@ -171,5 +181,6 @@ Web-to-API connectivity check:
 
 - The current codebase still uses internal `Codex.*` runtime identifiers in some
   places; Docker and docs now present the Strata product surface
-- The embedder and Ollama profile are optional enhancements
+- The embedder and Ollama services are default-off optional enhancements in
+  Compose
 - Read-only source mounting is part of Strata's trust model

@@ -84,11 +84,19 @@ Planned expansion follows the milestone roadmap in
 
 1. Copy `.env.example` to `.env`.
 2. Set `STRATA_SOURCES` to a readable host directory that Strata is allowed to ingest.
-3. Review `POSTGRES_*`, `STRATA_DB_CONNECTION`, `STRATA_API_PORT`, and optional embedding settings.
+3. Review `POSTGRES_*`, `STRATA_DB_CONNECTION`, `STRATA_API_PORT`, and optional embedding settings if you plan to enable AI enhancement services.
 4. Start the stack:
 
 ```powershell
 docker compose -f ops/docker-compose.yml --env-file .env up -d --build
+```
+
+This default path starts the core retrieval stack without the embedder.
+
+Optional AI enhancement services:
+
+```powershell
+docker compose -f ops/docker-compose.yml --env-file .env --profile ai up -d --build
 ```
 
 5. Apply the SQL migrations described in [`docs/operations.md`](docs/operations.md).

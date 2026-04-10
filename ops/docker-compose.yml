@@ -89,6 +89,7 @@ services:
 
   strata-embedder:
     container_name: strata-embedder
+    profiles: ["ai"]
     build:
       context: ..
       dockerfile: ops/Dockerfile.embedder
@@ -125,7 +126,7 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: strata-ollama
-    profiles: ["ollama"]
+    profiles: ["ai", "ollama"]
     restart: unless-stopped
     ports:
       - "${STRATA_OLLAMA_PORT:-11434}:11434"
