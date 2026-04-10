@@ -34,6 +34,8 @@ boundary, PostgreSQL-backed indexing, and API-first document access.
 ### Optional Enhancement Layer
 
 - Embedder worker and Ollama profile remain optional
+- Docker Compose keeps the embedder and local Ollama runtime off by default
+  unless the `ai` profile is enabled
 - Search and document retrieval continue to function without them
 - AI is a downstream enhancement layer, not a core dependency
 
