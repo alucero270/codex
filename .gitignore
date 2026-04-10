@@ -4,6 +4,9 @@
 **/obj/
 **/node_modules/
 **/dist/
+# Frontend local install/build output
+src/Codex.Web/node_modules/
+src/Codex.Web/dist/
 src/Codex.Web/.env.local
 src/Codex.Web/.env.*.local
 ops/.env
