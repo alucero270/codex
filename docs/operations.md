@@ -100,6 +100,48 @@ to match.
 
 ## Verification
 
+### Platform Readiness Checklist
+
+Use this checklist before treating a local or development deployment as ready
+for Milestone 2 ingestion work.
+
+Everything below must pass:
+
+- configuration sanity:
+  `.env` exists at the repository root, `STRATA_DB_CONNECTION` is set, and
+  `STRATA_SOURCES` points to an existing host directory intended for ingestion
+- source-boundary sanity:
+  the configured `STRATA_SOURCES` directory contains only intended content, and
+  Compose will mount that path read-only into the API and indexer services
+- backend build:
+  `dotnet build Codex.slnx` succeeds without project or solution errors
+- web build:
+  in `src/Codex.Web`, `npm install` and `npm run build` both succeed
+- Compose config:
+  `docker compose -f ops/docker-compose.yml --env-file .env config` succeeds
+- API readiness:
+  `GET /health` returns `200 OK` after the API starts
+- retrieval smoke test:
+  `POST /api/search` returns a successful response with the configured API
+- source path sanity:
+  the running stack can start with the configured source path mounted at the
+  same host path and without broader filesystem access
+- web-to-API sanity:
+  when the web shell is used, it can reach the configured API origin without
+  browser network or CORS errors
+
+Recommended command path:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ops/validate-platform-readiness.ps1
+```
+
+Then run the source-path and smoke-test checks in this document against your
+actual `.env` values.
+
+Milestone 1 should not be considered complete for a local or development
+environment unless every checklist item above passes.
+
 Check stack health:
 
 ```powershell
