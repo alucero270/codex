@@ -1,10 +1,16 @@
 /.idea
 /.vs
 .env
+/artifacts/
 **/bin/
 **/obj/
 **/node_modules/
 **/dist/
+*.user
+*.suo
+*.userprefs
+*.sln.ide
+.DS_Store
 # Frontend local install/build output
 src/Codex.Web/node_modules/
 src/Codex.Web/dist/
