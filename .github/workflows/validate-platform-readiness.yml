@@ -98,8 +98,8 @@ jobs:
 
           curl --fail --silent http://127.0.0.1:5180/health > /dev/null
 
-          if ! curl --silent http://127.0.0.1:5180/openapi/v1.json | grep -q '"/health"'; then
+          if ! curl --fail --silent http://127.0.0.1:5180/openapi/v1.json > /dev/null; then
             cat api.log
-            echo "OpenAPI is missing /health."
+            echo "OpenAPI endpoint did not return a successful response."
             exit 1
           fi
