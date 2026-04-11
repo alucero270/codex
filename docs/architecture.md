@@ -68,15 +68,35 @@ boundary, PostgreSQL-backed indexing, and API-first document access.
 Strata's architecture assumes all ingestion is anchored to configured source
 roots and never to user-supplied filesystem paths.
 
+### Boundary Model
+
+- The configured `STRATA_SOURCES` value defines the only trusted filesystem
+  starting point for ingestion in a given deployment
+- The API, indexer, and operator workflows must treat any path outside that root
+  as out of bounds
+- Stored document identity is relative to the declared root, not to arbitrary
+  host paths
+- Requests may trigger ingestion work, but they must not supply or redefine the
+  filesystem scope of that work
+
 ### Required Rules
 
 - The configured root must exist before ingestion starts
+- The configured root must be explicit server-side configuration, never a
+  client-selected path
 - Stored document paths must remain relative to that root
 - Boundary checks must prevent traversal outside declared roots
+- Filesystem indirection such as symlinks or reparse points must not expand the
+  effective boundary beyond the declared root
 - Read-only mounts are the default deployment mode
+- When enforcement cannot prove a path remains in bounds, the system should fail
+  closed for that path instead of widening access
 
 ### Current Foundation
 
 - Compose mounts the configured source path read-only
 - API and indexer receive the root path from configuration only
 - Indexed document paths are normalized relative paths
+- The current foundation establishes the boundary contract now, while deeper
+  hardening and verification remain follow-on work rather than implied current
+  guarantees

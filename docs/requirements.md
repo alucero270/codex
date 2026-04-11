@@ -38,17 +38,25 @@ Strata must only ingest and operate on explicitly configured sources.
 
 ### Rules
 
-- No traversal outside configured root paths
-- Normalize and validate all paths
-- Do not follow symlinks outside allowed boundaries
-- All ingestion must originate from declared sources
-- Source roots must be configured server-side, never supplied by clients
+- The configured source root is a core trust boundary for the deployment
+- All ingestion must begin from a declared source root and never from a
+  client-supplied filesystem path
+- Candidate paths must be normalized and validated before use
+- No traversal may resolve outside a declared source root
+- Relative paths must remain relative to the declared source root when stored or
+  returned
+- Symlinks, reparse points, or equivalent filesystem indirection must not widen
+  access beyond the declared source root
+- If boundary safety cannot be proven for a candidate path, ingestion must fail
+  closed for that path rather than widen access
 
 ### Implementation Note
 
 The current runtime already scopes ingestion to a configured root path. Full
-boundary hardening, including symlink escape handling, remains a standing
-product requirement as the ingestion engine matures.
+boundary hardening, including deeper symlink and reparse-point escape handling,
+remains a standing product requirement as the ingestion engine matures. This
+note does not weaken the rules above; it records that the product requirement is
+already set even where deeper enforcement work is still queued.
 
 ## AI-Optional Requirement
 

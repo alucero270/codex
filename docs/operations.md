@@ -47,6 +47,8 @@ Operational expectation:
 - The directory must exist before the stack starts
 - The directory should contain only content intended for ingestion
 - Strata should not be granted broader filesystem access than necessary
+- Operators should treat the configured path as a trust boundary, not as a
+  convenience pointer to a broader parent directory
 
 ## Running With Docker Compose
 
@@ -154,6 +156,19 @@ Verify API readiness:
 ```powershell
 Invoke-WebRequest -Uri http://localhost:8080/health
 ```
+
+Verify source-boundary configuration:
+
+- confirm `STRATA_SOURCES` points to the narrowest host directory Strata should
+  be allowed to ingest for this deployment
+- confirm the same path is mounted into the API and indexer services as a
+  read-only bind mount in `ops/docker-compose.yml`
+- confirm the deployment does not rely on client requests to supply filesystem
+  paths or widen ingestion scope
+- confirm the configured directory does not depend on symlink or reparse-point
+  traversal to reach required content until deeper boundary hardening work lands
+- confirm the running stack does not need broader host filesystem access than
+  the declared source root
 
 Smoke-test search:
 
