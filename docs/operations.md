@@ -144,6 +144,10 @@ This validation entry point runs:
 - `docker compose ... config` against the repository-root `.env`
 - a local API boot probe against `GET /health`
 
+GitHub Actions runs the same baseline validation on pull requests and pushes to
+`main` through
+`.github/workflows/validate-platform-readiness.yml`.
+
 ## Web Shell
 
 The current web shell runs on Next.js and continues to call the Strata API
