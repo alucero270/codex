@@ -117,6 +117,42 @@ docker compose -f ops/docker-compose.yml --env-file .env --profile ai up -d --bu
 - [`docs/adr/ADR-001-project-identity.md`](docs/adr/ADR-001-project-identity.md)
 - [`docs/adr/ADR-002-internal-rename-strategy.md`](docs/adr/ADR-002-internal-rename-strategy.md)
 
+## Repository Layout
+
+Strata now standardizes around a simple top-level layout:
+
+- `src/` for product code and runtime projects
+- `tests/` for test projects as coverage is added
+- `docs/` for product, architecture, and operations documentation
+- `build/` for repository-level build helpers and future build customizations
+- `ops/` for deployment and runtime assets such as Compose, Dockerfiles,
+  migrations, and operational validation scripts
+- `artifacts/` as the reserved generated-output location for future build and
+  packaging work
+
+Current note:
+
+- `ops/` remains separate from `build/` because its contents are deployment and
+  runtime assets, not build customizations
+- `Codex.slnx` is still the current solution file name during the internal
+  rename transition
+- empty layout placeholders do not imply finished test or packaging coverage
+
+## Build Bootstrap
+
+Use the root bootstrap scripts to run the current baseline validation flow:
+
+```powershell
+.\build.cmd
+```
+
+```bash
+./build.sh
+```
+
+These entry points are bootstrap wrappers for the current readiness validation,
+not a full packaging pipeline yet.
+
 ## Roadmap
 
 - Milestone 2: source-aware ingestion and source-boundary hardening
