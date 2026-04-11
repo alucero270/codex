@@ -132,12 +132,16 @@ Use the following workflow for every contribution:
 
 1. Create or choose one GitHub issue.
 2. Confirm the issue stays narrow enough to review in one pull request.
-3. Branch from `main` using `feature/<number>-short-description`.
-4. Implement only the work required for that issue.
-5. Run the smallest relevant local validation before pushing.
-6. Push the branch and open a pull request against `main`.
-7. Reference the issue in the pull request and commit footer using
+3. Update local `main` from `origin/main` so the issue branch starts from the
+   current mainline state.
+4. Branch from `main` using `feature/<number>-short-description`.
+5. Implement only the work required for that issue.
+6. Run the smallest relevant local validation before pushing.
+7. Push the branch and open a pull request against `main`.
+8. Reference the issue in the pull request and commit footer using
    `Closes #<number>` when the change completes the issue.
+9. After the pull request merges, confirm the issue is closed and delete the
+   completed branch locally and on GitHub.
 
 ## Pull Request Expectations
 
