@@ -110,6 +110,7 @@ docker compose -f ops/docker-compose.yml --env-file .env --profile ai up -d --bu
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/data-model.md`](docs/data-model.md)
 - [`docs/feasibility.md`](docs/feasibility.md)
+- [`docs/quality-attributes.md`](docs/quality-attributes.md)
 - [`docs/api.md`](docs/api.md)
 - [`docs/api-surface-audit.md`](docs/api-surface-audit.md)
 - [`docs/operations.md`](docs/operations.md)
