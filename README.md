@@ -115,6 +115,7 @@ docker compose -f ops/docker-compose.yml --env-file .env --profile ai up -d --bu
 - [`docs/api-surface-audit.md`](docs/api-surface-audit.md)
 - [`docs/operations.md`](docs/operations.md)
 - [`docs/test-strategy.md`](docs/test-strategy.md)
+- [`docs/traceability.md`](docs/traceability.md)
 - [`docs/milestones.md`](docs/milestones.md)
 - [`docs/adr/ADR-001-project-identity.md`](docs/adr/ADR-001-project-identity.md)
 - [`docs/adr/ADR-002-internal-rename-strategy.md`](docs/adr/ADR-002-internal-rename-strategy.md)
