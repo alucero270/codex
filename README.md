@@ -113,6 +113,7 @@ docker compose -f ops/docker-compose.yml --env-file .env --profile ai up -d --bu
 - [`docs/quality-attributes.md`](docs/quality-attributes.md)
 - [`docs/api.md`](docs/api.md)
 - [`docs/api-surface-audit.md`](docs/api-surface-audit.md)
+- [`docs/delivery-process.md`](docs/delivery-process.md)
 - [`docs/operations.md`](docs/operations.md)
 - [`docs/test-strategy.md`](docs/test-strategy.md)
 - [`docs/traceability.md`](docs/traceability.md)
