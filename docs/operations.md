@@ -169,9 +169,19 @@ Verify source-boundary configuration:
 - confirm the deployment does not rely on client requests to supply filesystem
   paths or widen ingestion scope
 - confirm the configured directory does not depend on symlink or reparse-point
-  traversal to reach required content until deeper boundary hardening work lands
+  traversal to reach required content; Strata now skips those entries during
+  ingestion instead of following them
 - confirm the running stack does not need broader host filesystem access than
   the declared source root
+
+Verify runtime boundary enforcement:
+
+- place or identify a symlink or reparse-point entry under `STRATA_SOURCES`
+  that targets content outside the intended source root
+- run an indexing job and confirm the indexer logs a warning that the entry was
+  skipped instead of traversed
+- confirm only markdown files that remain provably inside the configured source
+  boundary are ingested
 
 Smoke-test search:
 
@@ -228,7 +238,8 @@ Current logging intent:
 - retrieval logs include request context such as trace id, request path, method,
   request outcome, and safe request metadata like query length or result count
 - ingestion logs include worker id, job id, configured source root, lifecycle
-  events, sync counts, and failure details
+  events, sync counts, failure details, and boundary-skip warnings when unsafe
+  filesystem entries are encountered
 - document content and raw search query text should not be logged as part of
   routine retrieval diagnostics
 

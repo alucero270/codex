@@ -97,6 +97,7 @@ roots and never to user-supplied filesystem paths.
 - Compose mounts the configured source path read-only
 - API and indexer receive the root path from configuration only
 - Indexed document paths are normalized relative paths
-- The current foundation establishes the boundary contract now, while deeper
-  hardening and verification remain follow-on work rather than implied current
-  guarantees
+- The indexer canonicalizes discovered entry paths before ingestion and skips
+  any entry that cannot be proven to remain inside the configured root
+- The indexer does not follow symlinks or other reparse-point entries during
+  ingestion, so filesystem indirection cannot silently widen the source scope
