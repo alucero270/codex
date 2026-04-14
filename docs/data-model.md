@@ -37,6 +37,8 @@ Stores indexing work items claimed by background workers.
 - `requested_at`: job creation timestamp
 - `claimed_at`: timestamp recorded when a worker claims the job
 - `completed_at`: timestamp recorded on successful completion
+- `attempt_count`: number of processing attempts claimed so far
+- `max_attempts`: server-controlled retry ceiling for the job
 - `worker_id`: worker identifier for claimed jobs
 - `error_message`: truncated failure detail when processing fails
 
@@ -44,6 +46,8 @@ Stores indexing work items claimed by background workers.
 
 - `ix_index_jobs_status_requested_at_id` supports pending-job polling
 - Job creation is API-driven; claiming and completion are background operations
+- failed attempts return to `pending` while `attempt_count < max_attempts`
+- terminal `failed` state means the last allowed attempt has already been used
 
 ## Configured Source Model
 

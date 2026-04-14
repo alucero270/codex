@@ -6,20 +6,24 @@ namespace Codex.Api.Data;
 
 public sealed class IndexJobsStore(NpgsqlDataSource dataSource, CodexSettings settings)
 {
+    private const int DefaultMaxAttempts = 3;
+
     // Current schema has no root_path column. Reference docs_root in the insert path
     // so job creation still depends on server-side configuration.
     private const string InsertJobSql = """
         WITH configured_root AS (
             SELECT @docs_root::text AS docs_root
         )
-        INSERT INTO index_jobs (status)
-        SELECT @status
+        INSERT INTO index_jobs (status, max_attempts)
+        SELECT @status, @max_attempts
         FROM configured_root
-        RETURNING id, status, requested_at, claimed_at, completed_at, worker_id, error_message;
+        RETURNING id, status, requested_at, claimed_at, completed_at, attempt_count,
+            max_attempts, worker_id, error_message;
         """;
 
     private const string SelectJobByIdSql = """
-        SELECT id, status, requested_at, claimed_at, completed_at, worker_id, error_message
+        SELECT id, status, requested_at, claimed_at, completed_at, attempt_count,
+            max_attempts, worker_id, error_message
         FROM index_jobs
         WHERE id = @id;
         """;
@@ -29,6 +33,8 @@ public sealed class IndexJobsStore(NpgsqlDataSource dataSource, CodexSettings se
         await using var command = dataSource.CreateCommand(InsertJobSql);
         command.Parameters.AddWithValue("docs_root", settings.DocsRoot);
         command.Parameters.AddWithValue("status", "pending");
+        // Retry policy remains server-controlled for the current product slice.
+        command.Parameters.AddWithValue("max_attempts", DefaultMaxAttempts);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         if (!await reader.ReadAsync(cancellationToken))
@@ -60,6 +66,8 @@ public sealed class IndexJobsStore(NpgsqlDataSource dataSource, CodexSettings se
     {
         var claimedAtOrdinal = reader.GetOrdinal("claimed_at");
         var completedAtOrdinal = reader.GetOrdinal("completed_at");
+        var attemptCountOrdinal = reader.GetOrdinal("attempt_count");
+        var maxAttemptsOrdinal = reader.GetOrdinal("max_attempts");
         var workerIdOrdinal = reader.GetOrdinal("worker_id");
         var errorMessageOrdinal = reader.GetOrdinal("error_message");
 
@@ -73,6 +81,8 @@ public sealed class IndexJobsStore(NpgsqlDataSource dataSource, CodexSettings se
             CompletedAt: reader.IsDBNull(completedAtOrdinal)
                 ? null
                 : reader.GetDateTime(completedAtOrdinal),
+            AttemptCount: reader.GetInt32(attemptCountOrdinal),
+            MaxAttempts: reader.GetInt32(maxAttemptsOrdinal),
             WorkerId: reader.IsDBNull(workerIdOrdinal)
                 ? null
                 : reader.GetString(workerIdOrdinal),

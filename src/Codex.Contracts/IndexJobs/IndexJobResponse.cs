@@ -6,6 +6,8 @@ public sealed record IndexJobResponse(
     DateTime RequestedAt,
     DateTime? ClaimedAt,
     DateTime? CompletedAt,
+    int AttemptCount,
+    int MaxAttempts,
     string? WorkerId,
     string? ErrorMessage,
     object? Stats);
