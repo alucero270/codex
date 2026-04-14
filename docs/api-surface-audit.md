@@ -23,7 +23,7 @@ explicit.
 | `POST /api/search` | `SearchController` | search indexed documents | intended product-facing endpoint | Core retrieval API for the current Strata slice. |
 | `GET /api/documents/{id}` | `DocumentsController` | fetch a known document | intended product-facing endpoint | Supports document viewing after search or direct lookup. |
 | `POST /api/index-jobs` | `IndexJobsController` | create indexing work | intended product-facing endpoint | Current request shape is intentionally minimal for the early product slice. |
-| `GET /api/index-jobs/{id}` | `IndexJobsController` | read indexing job status | intended product-facing endpoint | Supports current operational verification of indexing flow. |
+| `GET /api/index-jobs/{id}` | `IndexJobsController` | read indexing job status | intended product-facing endpoint | Supports current operational verification of indexing flow, including retry accounting. |
 | `GET /openapi/v1.json` | `MapOpenApi()` in `Program.cs` | development-time API description | development-only support endpoint | Present only in Development; useful for inspection, not part of the stable product contract. |
 
 ## Non-Product Or Limited-Scope Surface

@@ -87,6 +87,13 @@ Create a new indexing job.
 
 Returns `201 Created` with the created job payload.
 
+### Behavior
+
+- retry policy is server-controlled for the current product slice
+- each job currently allows up to `3` total processing attempts
+- jobs return retry accounting metadata so operators can tell whether a
+  processing failure was the first attempt or a later retry
+
 ## `GET /api/index-jobs/{id}`
 
 Fetch the current status of an indexing job.
@@ -100,11 +107,20 @@ Fetch the current status of an indexing job.
   "requestedAt": "2026-04-10T08:20:00Z",
   "claimedAt": "2026-04-10T08:20:02Z",
   "completedAt": "2026-04-10T08:20:05Z",
+  "attemptCount": 1,
+  "maxAttempts": 3,
   "workerId": "host:1234:abcd",
   "errorMessage": null,
   "stats": null
 }
 ```
+
+### Retry Semantics
+
+- `attemptCount` increments each time a worker claims the job for processing
+- a failed attempt returns the job to `pending` while `attemptCount` is still
+  below `maxAttempts`
+- a job becomes terminally `failed` only when the final allowed attempt fails
 
 ## Notes
 

@@ -56,13 +56,21 @@ public sealed class Worker(
         }
 
         // Claiming commits in the store before this point, so processing is lock-free.
-        logger.LogInformation("Claimed index job {JobId}", claimedJob.Id);
+        logger.LogInformation(
+            "Claimed index job {JobId} (attempt {AttemptCount}/{MaxAttempts})",
+            claimedJob.Id,
+            claimedJob.AttemptCount,
+            claimedJob.MaxAttempts);
 
         try
         {
             await ProcessClaimedJobAsync(claimedJob, documentsStore, cancellationToken);
             await indexJobsStore.MarkJobCompletedAsync(claimedJob.Id, cancellationToken);
-            logger.LogInformation("Completed index job {JobId}", claimedJob.Id);
+            logger.LogInformation(
+                "Completed index job {JobId} on attempt {AttemptCount}/{MaxAttempts}",
+                claimedJob.Id,
+                claimedJob.AttemptCount,
+                claimedJob.MaxAttempts);
         }
         catch (Exception ex)
         {
@@ -73,8 +81,31 @@ public sealed class Worker(
                 errorMessage = errorMessage[..1000];
             }
 
-            await indexJobsStore.MarkJobFailedAsync(claimedJob.Id, errorMessage, cancellationToken);
-            logger.LogError(ex, "Failed index job {JobId}", claimedJob.Id);
+            var failureDisposition =
+                await indexJobsStore.RecordJobFailureAsync(
+                    claimedJob.Id,
+                    errorMessage,
+                    cancellationToken);
+
+            if (failureDisposition.WillRetry)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Index job {JobId} failed on attempt {AttemptCount}/{MaxAttempts}; " +
+                    "returned to pending for retry.",
+                    claimedJob.Id,
+                    failureDisposition.AttemptCount,
+                    failureDisposition.MaxAttempts);
+            }
+            else
+            {
+                logger.LogError(
+                    ex,
+                    "Index job {JobId} failed on final attempt {AttemptCount}/{MaxAttempts}",
+                    claimedJob.Id,
+                    failureDisposition.AttemptCount,
+                    failureDisposition.MaxAttempts);
+            }
         }
     }
 

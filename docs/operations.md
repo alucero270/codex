@@ -95,6 +95,9 @@ Get-Content -Raw ops/migrations/002_documents.sql |
 Get-Content -Raw ops/migrations/003_jobs.sql |
   docker compose -f ops/docker-compose.yml --env-file .env exec -T postgres `
   psql -v ON_ERROR_STOP=1 -U strata -d strata
+Get-Content -Raw ops/migrations/004_job_retries.sql |
+  docker compose -f ops/docker-compose.yml --env-file .env exec -T postgres `
+  psql -v ON_ERROR_STOP=1 -U strata -d strata
 ```
 
 If you change the PostgreSQL credentials in `.env`, update the `psql` arguments
@@ -187,6 +190,16 @@ Create an indexing job:
 Invoke-WebRequest -Uri http://localhost:8080/api/index-jobs -Method Post `
   -ContentType "application/json" -Body "{}"
 ```
+
+Verify index-job retry state:
+
+- poll `GET /api/index-jobs/{id}` after creating the job
+- expect `attemptCount` to increment each time the worker claims the job
+- if an attempt fails and retries remain, expect the job to return to `pending`
+  instead of remaining terminal immediately
+- expect a terminal `failed` job to report `attemptCount == maxAttempts`
+- the current retry policy is server-controlled and allows up to `3` total
+  attempts per job
 
 Platform readiness validation:
 
