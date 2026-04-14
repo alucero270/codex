@@ -6,7 +6,9 @@ namespace Codex.Api.Controllers;
 
 [ApiController]
 [Route("api/documents")]
-public sealed class DocumentsController(DocumentsStore store) : ControllerBase
+public sealed class DocumentsController(
+    DocumentsStore store,
+    ILogger<DocumentsController> logger) : ControllerBase
 {
     [HttpGet("{id:long}")]
     [ProducesResponseType<DocumentResponse>(StatusCodes.Status200OK)]
@@ -15,8 +17,23 @@ public sealed class DocumentsController(DocumentsStore store) : ControllerBase
         [FromRoute] long id,
         CancellationToken cancellationToken)
     {
+        using var scope = logger.BeginScope(
+            new Dictionary<string, object?>
+            {
+                ["TraceId"] = HttpContext.TraceIdentifier,
+                ["RequestPath"] = HttpContext.Request.Path.Value,
+                ["RequestMethod"] = HttpContext.Request.Method,
+                ["DocumentId"] = id
+            });
+
         var document = await store.GetByIdAsync(id, cancellationToken);
-        // Missing ids map to 404 for viewer callers.
-        return document is null ? NotFound() : Ok(document);
+        if (document is null)
+        {
+            logger.LogWarning("Document lookup returned no result.");
+            return NotFound();
+        }
+
+        logger.LogInformation("Returned document response.");
+        return Ok(document);
     }
 }

@@ -6,6 +6,13 @@ using Npgsql;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.TimestampFormat = "O";
+});
+
 var docsRoot = builder.Configuration["Codex:DocsRoot"];
 if (string.IsNullOrWhiteSpace(docsRoot))
 {

@@ -1,6 +1,7 @@
 using Codex.Indexer.Configuration;
 using Codex.Indexer.Data;
 using Codex.Indexer.Indexing;
+using System.Diagnostics;
 
 namespace Codex.Indexer;
 
@@ -17,9 +18,10 @@ public sealed class Worker(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         logger.LogInformation(
-            "Codex.Indexer started (worker_id: {WorkerId}, docs_root: {DocsRoot})",
+            "Codex.Indexer started (worker_id: {WorkerId}, docs_root: {DocsRoot}, poll_interval_seconds: {PollIntervalSeconds})",
             _workerId,
-            settings.DocsRoot);
+            settings.DocsRoot,
+            _pollInterval.TotalSeconds);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -33,7 +35,11 @@ public sealed class Worker(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Unhandled error in polling loop.");
+                logger.LogError(
+                    ex,
+                    "Unhandled error in polling loop (worker_id: {WorkerId}, docs_root: {DocsRoot})",
+                    _workerId,
+                    settings.DocsRoot);
                 await Task.Delay(_pollInterval, stoppingToken);
             }
         }
@@ -51,14 +57,26 @@ public sealed class Worker(
             await indexJobsStore.ClaimNextPendingJobAsync(_workerId, cancellationToken);
         if (claimedJob is null)
         {
+            logger.LogDebug(
+                "No pending index job found (worker_id: {WorkerId}, poll_interval_seconds: {PollIntervalSeconds})",
+                _workerId,
+                _pollInterval.TotalSeconds);
             await Task.Delay(_pollInterval, cancellationToken);
             return;
         }
 
+        using var loggingScope = logger.BeginScope(
+            new Dictionary<string, object?>
+            {
+                ["WorkerId"] = _workerId,
+                ["JobId"] = claimedJob.Id,
+                ["DocsRoot"] = settings.DocsRoot
+            });
+        var stopwatch = Stopwatch.StartNew();
+
         // Claiming commits in the store before this point, so processing is lock-free.
         logger.LogInformation(
-            "Claimed index job {JobId} (attempt {AttemptCount}/{MaxAttempts})",
-            claimedJob.Id,
+            "Claimed index job for processing (attempt_count: {AttemptCount}, max_attempts: {MaxAttempts})",
             claimedJob.AttemptCount,
             claimedJob.MaxAttempts);
 
@@ -66,9 +84,10 @@ public sealed class Worker(
         {
             await ProcessClaimedJobAsync(claimedJob, documentsStore, cancellationToken);
             await indexJobsStore.MarkJobCompletedAsync(claimedJob.Id, cancellationToken);
+            stopwatch.Stop();
             logger.LogInformation(
-                "Completed index job {JobId} on attempt {AttemptCount}/{MaxAttempts}",
-                claimedJob.Id,
+                "Completed index job (duration_ms: {DurationMs}, attempt_count: {AttemptCount}, max_attempts: {MaxAttempts})",
+                stopwatch.ElapsedMilliseconds,
                 claimedJob.AttemptCount,
                 claimedJob.MaxAttempts);
         }
@@ -86,25 +105,31 @@ public sealed class Worker(
                     claimedJob.Id,
                     errorMessage,
                     cancellationToken);
+            stopwatch.Stop();
 
             if (failureDisposition.WillRetry)
             {
                 logger.LogWarning(
                     ex,
-                    "Index job {JobId} failed on attempt {AttemptCount}/{MaxAttempts}; " +
-                    "returned to pending for retry.",
-                    claimedJob.Id,
+                    "Index job failed and returned to pending for retry " +
+                    "(duration_ms: {DurationMs}, attempt_count: {AttemptCount}, " +
+                    "max_attempts: {MaxAttempts}, error_message: {ErrorMessage})",
+                    stopwatch.ElapsedMilliseconds,
                     failureDisposition.AttemptCount,
-                    failureDisposition.MaxAttempts);
+                    failureDisposition.MaxAttempts,
+                    errorMessage);
             }
             else
             {
                 logger.LogError(
                     ex,
-                    "Index job {JobId} failed on final attempt {AttemptCount}/{MaxAttempts}",
-                    claimedJob.Id,
+                    "Index job failed on final attempt " +
+                    "(duration_ms: {DurationMs}, attempt_count: {AttemptCount}, " +
+                    "max_attempts: {MaxAttempts}, error_message: {ErrorMessage})",
+                    stopwatch.ElapsedMilliseconds,
                     failureDisposition.AttemptCount,
-                    failureDisposition.MaxAttempts);
+                    failureDisposition.MaxAttempts,
+                    errorMessage);
             }
         }
     }
@@ -119,22 +144,24 @@ public sealed class Worker(
         // Phase 1 behavior: verify server-configured docs root before marking job complete.
         if (!Directory.Exists(settings.DocsRoot))
         {
+            logger.LogError(
+                "Configured docs root was missing before scan began (docs_root: {DocsRoot})",
+                settings.DocsRoot);
             throw new DirectoryNotFoundException(
                 $"Configured docs root '{settings.DocsRoot}' does not exist.");
         }
 
+        logger.LogInformation("Scanning configured docs root for markdown content.");
         var scannedDocuments = await scanner.ScanAsync(settings.DocsRoot, cancellationToken);
         var syncResult =
             await documentsStore.SyncDocumentsAsync(scannedDocuments, cancellationToken);
 
         logger.LogInformation(
-            "Synced markdown documents for job {JobId}: scanned {ScannedCount}, upserted " +
-            "{UpsertedCount}, deleted {DeletedCount}",
-            claimedJob.Id,
+            "Synced markdown documents (scanned_count: {ScannedCount}, upserted_count: {UpsertedCount}, deleted_count: {DeletedCount})",
             syncResult.ScannedCount,
             syncResult.UpsertedCount,
             syncResult.DeletedCount);
 
-        logger.LogDebug("Processed indexing work for job {JobId}.", claimedJob.Id);
+        logger.LogDebug("Finished indexing work for claimed job.");
     }
 }
