@@ -218,6 +218,35 @@ GitHub Actions runs the same baseline validation on pull requests and pushes to
 `main` through
 `.github/workflows/validate-platform-readiness.yml`.
 
+## Runtime Logs
+
+Strata now emits structured JSON console logs for the API and indexer so local
+and container logs can be reviewed consistently.
+
+Current logging intent:
+
+- retrieval logs include request context such as trace id, request path, method,
+  request outcome, and safe request metadata like query length or result count
+- ingestion logs include worker id, job id, configured source root, lifecycle
+  events, sync counts, and failure details
+- document content and raw search query text should not be logged as part of
+  routine retrieval diagnostics
+
+Local verification:
+
+```powershell
+docker compose -f ops/docker-compose.yml --env-file .env logs --tail 100 api
+docker compose -f ops/docker-compose.yml --env-file .env logs --tail 100 indexer
+```
+
+What to confirm:
+
+- API log entries are JSON-shaped and include scoped request fields for search,
+  document reads, and index-job operations
+- indexer log entries are JSON-shaped and include worker and job context for job
+  claim, sync, completion, and failure paths
+- retrieval diagnostics do not include full document content or raw query text
+
 ## Web Shell
 
 The current web shell runs on Next.js and continues to call the Strata API
