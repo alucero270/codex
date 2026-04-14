@@ -4,7 +4,10 @@ using Npgsql;
 
 namespace Codex.Api.Data;
 
-public sealed class IndexJobsStore(NpgsqlDataSource dataSource, CodexSettings settings)
+public sealed class IndexJobsStore(
+    NpgsqlDataSource dataSource,
+    CodexSettings settings,
+    SourcesStore sourcesStore)
 {
     private const int DefaultMaxAttempts = 3;
 
@@ -30,6 +33,11 @@ public sealed class IndexJobsStore(NpgsqlDataSource dataSource, CodexSettings se
 
     public async Task<IndexJobResponse> CreatePendingJobAsync(CancellationToken cancellationToken)
     {
+        await sourcesStore.EnsureConfiguredFilesystemSourceAsync(
+            settings.SourceName,
+            settings.DocsRoot,
+            cancellationToken);
+
         await using var command = dataSource.CreateCommand(InsertJobSql);
         command.Parameters.AddWithValue("docs_root", settings.DocsRoot);
         command.Parameters.AddWithValue("status", "pending");

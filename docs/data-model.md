@@ -5,6 +5,28 @@
 Strata currently persists indexed content and indexing workflow state in
 PostgreSQL.
 
+## `sources`
+
+Stores explicit ingestion source records for configured connectors.
+
+### Columns
+
+- `id`: bigint identity primary key
+- `name`: server-controlled source name for operator-facing identification
+- `type`: current connector type, currently `filesystem`
+- `root_path`: unique configured filesystem root for the source
+- `status`: lifecycle status such as `active`, `disabled`, or `error`
+- `last_indexed`: timestamp reserved for source-level lifecycle tracking
+
+### Notes
+
+- the current product slice persists one configured filesystem source per
+  deployment through the ingestion path
+- source records are server-controlled and derive from deployment
+  configuration, not client-supplied filesystem paths
+- later Milestone 2 work will link documents and index jobs directly to source
+  records and populate richer lifecycle metadata
+
 ## `documents`
 
 Stores searchable document records.
@@ -49,10 +71,11 @@ Stores indexing work items claimed by background workers.
 - failed attempts return to `pending` while `attempt_count < max_attempts`
 - terminal `failed` state means the last allowed attempt has already been used
 
-## Configured Source Model
+## Current Source Foundation
 
-The current implementation uses a single configured source root per deployment.
-That root is not yet persisted as a first-class table.
+The current implementation still operates with a single configured filesystem
+source root per deployment, but that source is now persisted as a first-class
+record in `sources`.
 
-Future milestone work may introduce explicit `sources` records, but the product
-boundary already assumes every indexed path belongs to a declared source root.
+Broader multi-source workflows, source-scoped job ownership, and source
+management APIs remain follow-on Milestone 2 work.

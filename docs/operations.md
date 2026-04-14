@@ -13,6 +13,7 @@ Key variables:
 - `STRATA_API_PORT`
 - `STRATA_DB_CONNECTION`
 - `STRATA_SOURCES`
+- `STRATA_SOURCE_NAME`
 - `STRATA_EMBED_PROVIDER`
 - `STRATA_EMBED_MODEL`
 - `STRATA_LOG_LEVEL`
@@ -39,6 +40,8 @@ Key variable:
 ## Configuring Sources
 
 - Set `STRATA_SOURCES` to the host path Strata is allowed to ingest
+- Optionally set `STRATA_SOURCE_NAME` to the operator-facing name for that
+  configured filesystem source
 - That path is mounted read-only into the containers at the same path
 - Treat it as the active source boundary for the deployment
 
@@ -96,6 +99,9 @@ Get-Content -Raw ops/migrations/003_jobs.sql |
   docker compose -f ops/docker-compose.yml --env-file .env exec -T postgres `
   psql -v ON_ERROR_STOP=1 -U strata -d strata
 Get-Content -Raw ops/migrations/004_job_retries.sql |
+  docker compose -f ops/docker-compose.yml --env-file .env exec -T postgres `
+  psql -v ON_ERROR_STOP=1 -U strata -d strata
+Get-Content -Raw ops/migrations/005_sources.sql |
   docker compose -f ops/docker-compose.yml --env-file .env exec -T postgres `
   psql -v ON_ERROR_STOP=1 -U strata -d strata
 ```
@@ -164,6 +170,8 @@ Verify source-boundary configuration:
 
 - confirm `STRATA_SOURCES` points to the narrowest host directory Strata should
   be allowed to ingest for this deployment
+- confirm `STRATA_SOURCE_NAME`, when set, matches the operator-facing source
+  name you expect to persist for that configured filesystem root
 - confirm the same path is mounted into the API and indexer services as a
   read-only bind mount in `ops/docker-compose.yml`
 - confirm the deployment does not rely on client requests to supply filesystem

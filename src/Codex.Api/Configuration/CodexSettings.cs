@@ -1,3 +1,3 @@
 namespace Codex.Api.Configuration;
 
-public sealed record CodexSettings(string DocsRoot);
+public sealed record CodexSettings(string DocsRoot, string SourceName);
