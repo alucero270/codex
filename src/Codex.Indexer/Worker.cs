@@ -52,6 +52,7 @@ public sealed class Worker(
         using var scope = scopeFactory.CreateScope();
         var indexJobsStore = scope.ServiceProvider.GetRequiredService<IndexJobsStore>();
         var documentsStore = scope.ServiceProvider.GetRequiredService<DocumentsStore>();
+        var sourcesStore = scope.ServiceProvider.GetRequiredService<SourcesStore>();
 
         var claimedJob =
             await indexJobsStore.ClaimNextPendingJobAsync(_workerId, cancellationToken);
@@ -82,7 +83,11 @@ public sealed class Worker(
 
         try
         {
-            await ProcessClaimedJobAsync(claimedJob, documentsStore, cancellationToken);
+            await ProcessClaimedJobAsync(
+                claimedJob,
+                documentsStore,
+                sourcesStore,
+                cancellationToken);
             await indexJobsStore.MarkJobCompletedAsync(claimedJob.Id, cancellationToken);
             stopwatch.Stop();
             logger.LogInformation(
@@ -137,9 +142,15 @@ public sealed class Worker(
     private async Task ProcessClaimedJobAsync(
         ClaimedIndexJob claimedJob,
         DocumentsStore documentsStore,
+        SourcesStore sourcesStore,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        var configuredSource = await sourcesStore.EnsureConfiguredFilesystemSourceAsync(
+            settings.SourceName,
+            settings.DocsRoot,
+            cancellationToken);
 
         // Phase 1 behavior: verify server-configured docs root before marking job complete.
         if (!Directory.Exists(settings.DocsRoot))
@@ -157,7 +168,9 @@ public sealed class Worker(
             await documentsStore.SyncDocumentsAsync(scannedDocuments, cancellationToken);
 
         logger.LogInformation(
-            "Synced markdown documents (scanned_count: {ScannedCount}, upserted_count: {UpsertedCount}, deleted_count: {DeletedCount})",
+            "Synced markdown documents (source_id: {SourceId}, source_name: {SourceName}, scanned_count: {ScannedCount}, upserted_count: {UpsertedCount}, deleted_count: {DeletedCount})",
+            configuredSource.Id,
+            configuredSource.Name,
             syncResult.ScannedCount,
             syncResult.UpsertedCount,
             syncResult.DeletedCount);

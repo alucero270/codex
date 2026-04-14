@@ -33,12 +33,15 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException("ConnectionStrings:Default configuration is required.");
 }
 
-builder.Services.AddSingleton(new CodexSettings(docsRoot));
+var sourceName = ResolveSourceName(builder.Configuration, docsRoot);
+
+builder.Services.AddSingleton(new CodexSettings(docsRoot, sourceName));
 // Minimal data access for issue scope: parameterized SQL through Npgsql.
 builder.Services.AddSingleton(_ => new NpgsqlDataSourceBuilder(connectionString).Build());
 builder.Services.AddScoped<DocumentsStore>();
 builder.Services.AddScoped<IndexJobsStore>();
 builder.Services.AddScoped<SearchStore>();
+builder.Services.AddScoped<SourcesStore>();
 
 var app = builder.Build();
 
@@ -55,3 +58,16 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static string ResolveSourceName(IConfiguration configuration, string docsRoot)
+{
+    var configuredName = configuration["Codex:SourceName"];
+    if (!string.IsNullOrWhiteSpace(configuredName))
+    {
+        return configuredName.Trim();
+    }
+
+    var normalizedRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(docsRoot));
+    var leafName = Path.GetFileName(normalizedRoot);
+    return string.IsNullOrWhiteSpace(leafName) ? normalizedRoot : leafName;
+}

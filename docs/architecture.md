@@ -10,8 +10,12 @@ boundary, PostgreSQL-backed indexing, and API-first document access.
 ### Source Root
 
 - A host directory explicitly configured through `STRATA_SOURCES`
+- Optionally paired with a server-controlled source name through
+  `STRATA_SOURCE_NAME`
 - Mounted read-only into containers
 - Treated as the only allowed ingestion boundary for the running deployment
+- Persisted as a first-class `sources` record when ingestion work is created or
+  processed
 
 ### API Service
 

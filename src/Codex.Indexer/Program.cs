@@ -38,13 +38,29 @@ if (pollIntervalSeconds < 1)
     throw new InvalidOperationException("Codex:Indexer:PollIntervalSeconds must be at least 1.");
 }
 
-builder.Services.AddSingleton(new CodexSettings(docsRoot, pollIntervalSeconds));
+var sourceName = ResolveSourceName(builder.Configuration, docsRoot);
+
+builder.Services.AddSingleton(new CodexSettings(docsRoot, sourceName, pollIntervalSeconds));
 // Reuse one pool-backed datasource for the process lifetime.
 builder.Services.AddSingleton(_ => new NpgsqlDataSourceBuilder(connectionString).Build());
 builder.Services.AddSingleton<MarkdownDocumentScanner>();
 builder.Services.AddScoped<DocumentsStore>();
 builder.Services.AddScoped<IndexJobsStore>();
+builder.Services.AddScoped<SourcesStore>();
 builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();
 host.Run();
+
+static string ResolveSourceName(IConfiguration configuration, string docsRoot)
+{
+    var configuredName = configuration["Codex:SourceName"];
+    if (!string.IsNullOrWhiteSpace(configuredName))
+    {
+        return configuredName.Trim();
+    }
+
+    var normalizedRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(docsRoot));
+    var leafName = Path.GetFileName(normalizedRoot);
+    return string.IsNullOrWhiteSpace(leafName) ? normalizedRoot : leafName;
+}

@@ -59,13 +59,14 @@ Today, Strata is still early and intentionally narrow.
 Implemented now:
 
 - one configured filesystem source boundary per deployment
+- a first-class persisted source record for the configured filesystem source
 - markdown ingestion and indexing
 - retrieval APIs for search, document reads, and indexing jobs
 - product-facing Docker and environment configuration
 
 Planned or still maturing:
 
-- first-class multi-source modeling and source management APIs
+- multi-source modeling, source-scoped ingestion, and source management APIs
 - stronger runtime boundary hardening, including symlink escape protection
 - richer retrieval metadata, filtering, and pagination
 - broader verification coverage and more complete operator runbooks

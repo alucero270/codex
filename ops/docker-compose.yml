@@ -44,6 +44,7 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__Default: ${STRATA_DB_CONNECTION}
       Codex__DocsRootPath: ${STRATA_SOURCES}
+      Codex__SourceName: ${STRATA_SOURCE_NAME:-}
       Logging__LogLevel__Default: ${STRATA_LOG_LEVEL:-Information}
     ports:
       - "${STRATA_API_PORT:-8080}:8080"
@@ -79,6 +80,7 @@ services:
       DOTNET_ENVIRONMENT: Development
       ConnectionStrings__Default: ${STRATA_DB_CONNECTION}
       Codex__DocsRootPath: ${STRATA_SOURCES}
+      Codex__SourceName: ${STRATA_SOURCE_NAME:-}
       Logging__LogLevel__Default: ${STRATA_LOG_LEVEL:-Information}
     volumes:
       # Sources stay read-only so Strata cannot mutate upstream content.
